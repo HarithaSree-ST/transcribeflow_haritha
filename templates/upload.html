@@ -36,6 +36,10 @@
     <button type="button" onclick="stopRecording()">Stop & Process</button>
 
     <p id="recording-status"></p>
+<div id="loading-spinner" style="display:none;">
+    <div class="spinner"></div>
+    <p>Processing audio... Please wait</p>
+</div>
 
     <hr>
 
@@ -114,35 +118,45 @@
 <!-- ================= LIVE RECORDING SCRIPT ================= -->
 
 <script>
+
 let mediaRecorder;
 let audioChunks = [];
 
 function startRecording() {
+
     navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
+    .then(stream => {
 
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
 
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+        mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+        };
 
-            mediaRecorder.start();
-            document.getElementById("recording-status").innerText = "Recording...";
-        });
+        mediaRecorder.start();
+
+        // 🎙 Recording indicator
+        document.getElementById("recording-status").innerHTML = "⏳ Processing audio...";
+document.getElementById("loading-spinner").style.display = "block";
+    });
 }
+
 
 function stopRecording() {
 
     if (!mediaRecorder) return;
 
     mediaRecorder.stop();
-    document.getElementById("recording-status").innerText = "Processing...";
+
+    // ⏳ Processing indicator
+    document.getElementById("loading-spinner").style.display = "none";
+document.getElementById("recording-status").innerHTML = "✔ Completed";
 
     mediaRecorder.onstop = () => {
 
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+
         const formData = new FormData();
         formData.append("file", audioBlob, "live_recording.wav");
 
@@ -150,44 +164,69 @@ function stopRecording() {
             method: "POST",
             body: formData
         })
+
         .then(response => response.json())
+
         .then(data => {
 
-    if (data.transcript) {
+            if (data.transcript) {
 
-        document.getElementById("transcriptionBox").innerText = data.transcript;
-        document.getElementById("summaryBox").innerText = data.summary;
+                // Show transcription
+                document.getElementById("transcriptionBox").innerText = data.transcript;
 
-        // Remove old download section
-        const oldDownload = document.getElementById("live-download-section");
-        if (oldDownload) oldDownload.remove();
+                // Show summary
+                document.getElementById("summaryBox").innerText = data.summary;
 
-        // Create new download section
-        const downloadDiv = document.createElement("div");
-        downloadDiv.className = "result-box";
-        downloadDiv.id = "live-download-section";
 
-        downloadDiv.innerHTML = `
-            <h3>📂 Download Options</h3>
+                // Remove old download section if exists
+                const oldDownload = document.getElementById("live-download-section");
+                if (oldDownload) oldDownload.remove();
 
-            <a href="/download/combined/${data.combined_filename}">
-                <button class="download-btn">⬇ Download Full Report</button>
-            </a>
 
-            <br><br>
+                // Create new download section
+                const downloadDiv = document.createElement("div");
+                downloadDiv.className = "result-box";
+                downloadDiv.id = "live-download-section";
 
-            <a href="/download/json/${data.json_filename}">
-                <button class="download-btn">⬇ Download JSON</button>
-            </a>
-        `;
+                downloadDiv.innerHTML = `
+                    <h3>📂 Download Options</h3>
 
-        document.querySelector(".container").appendChild(downloadDiv);
+                    <a href="/download/combined/${data.combined_filename}">
+                        <button class="download-btn">⬇ Download Full Report</button>
+                    </a>
 
-        document.getElementById("recording-status").innerText = "Completed ✔";
-    }
-});
+                    <br><br>
+
+                    <a href="/download/json/${data.json_filename}">
+                        <button class="download-btn">⬇ Download JSON</button>
+                    </a>
+                `;
+
+                document.querySelector(".container").appendChild(downloadDiv);
+
+
+                // ✔ Completed indicator
+                document.getElementById("recording-status").innerHTML =
+                "✔ Completed";
+
+            } else {
+
+                document.getElementById("recording-status").innerHTML =
+                "❌ Error processing audio";
+
+            }
+
+        })
+
+        .catch(error => {
+
+            document.getElementById("recording-status").innerHTML =
+            "❌ Server error";
+
+        });
     };
 }
+
 </script>
 
 </body>

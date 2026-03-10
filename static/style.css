@@ -99,4 +99,25 @@ button:hover {
     overflow-y: auto;
     margin-top: 10px;
 } 
+/* Loading Spinner */
+
+#loading-spinner {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #6c63ff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 

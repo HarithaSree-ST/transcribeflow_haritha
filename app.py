@@ -281,6 +281,7 @@ def logout():
     session.pop("user", None)
     return redirect("/")
 
+
 # -------------------- RUN -------------------- #
 
 if __name__ == "__main__":
