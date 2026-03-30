@@ -6,12 +6,12 @@ from flask import Flask, render_template, request, redirect, flash, session, sen
 import mysql.connector
 from werkzeug.utils import secure_filename
 
-# -------------------- APP SETUP -------------------- #
+
 
 app = Flask(__name__)
 app.secret_key = "secretkey"
 
-# -------------------- LOAD MODELS -------------------- #
+
 
 whisper_model = whisper.load_model("base")
 summarizer = pipeline("summarization", model="t5-small")
@@ -137,26 +137,26 @@ def upload():
             file.save(filepath)
 
             try:
-                # 1️⃣ Transcription
+                
                 result = whisper_model.transcribe(filepath, fp16=False)
                 transcription = result["text"]
 
-                # 2️⃣ Summary
+               
                 summary = generate_summary(transcription)
 
                 base_name = filename.rsplit(".", 1)[0]
 
-                # 3️⃣ Save Transcript
+               
                 transcript_filename = base_name + "_transcript.txt"
                 with open(os.path.join(TRANSCRIPT_FOLDER, transcript_filename), "w", encoding="utf-8") as f:
                     f.write(transcription)
 
-                # 4️⃣ Save Summary
+               
                 summary_filename = base_name + "_summary.txt"
                 with open(os.path.join(SUMMARY_FOLDER, summary_filename), "w", encoding="utf-8") as f:
                     f.write(summary)
 
-                # 5️⃣ Save Combined File
+                
                 combined_filename = base_name + "_full.txt"
                 with open(os.path.join(COMBINED_FOLDER, combined_filename), "w", encoding="utf-8") as f:
                     f.write("TRANSCRIPTION:\n\n")
@@ -164,7 +164,7 @@ def upload():
                     f.write("\n\nSUMMARY:\n\n")
                     f.write(summary)
 
-                # 6️⃣ Save JSON File
+                
                 json_filename = base_name + ".json"
                 json_data = {
                     "transcript": transcription,
@@ -208,26 +208,26 @@ def api_upload():
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(filepath)
 
-        # 1️⃣ Transcribe
+        
         result = whisper_model.transcribe(filepath, fp16=False)
         transcription = result["text"]
 
-        # 2️⃣ Summarize
+        
         summary = generate_summary(transcription)
 
         base_name = filename.rsplit(".", 1)[0]
 
-        # 3️⃣ Save Transcript
+        
         transcript_filename = base_name + "_transcript.txt"
         with open(os.path.join(TRANSCRIPT_FOLDER, transcript_filename), "w", encoding="utf-8") as f:
             f.write(transcription)
 
-        # 4️⃣ Save Summary
+        
         summary_filename = base_name + "_summary.txt"
         with open(os.path.join(SUMMARY_FOLDER, summary_filename), "w", encoding="utf-8") as f:
             f.write(summary)
 
-        # 5️⃣ Save Combined
+        
         combined_filename = base_name + "_full.txt"
         with open(os.path.join(COMBINED_FOLDER, combined_filename), "w", encoding="utf-8") as f:
             f.write("TRANSCRIPTION:\n\n")
@@ -235,7 +235,7 @@ def api_upload():
             f.write("\n\nSUMMARY:\n\n")
             f.write(summary)
 
-        # 6️⃣ Save JSON
+        
         json_filename = base_name + ".json"
         with open(os.path.join(JSON_FOLDER, json_filename), "w", encoding="utf-8") as f:
             json.dump({
@@ -243,7 +243,7 @@ def api_upload():
                 "summary": summary
             }, f, indent=4)
 
-        # 🔥 IMPORTANT: Return filenames also
+        
         return jsonify({
             "transcript": transcription,
             "summary": summary,
